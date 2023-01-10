@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form>
+      <input type="text" id="productId" placeholder=" Input product ID" />
+      <br />
+      <input
+        type="text"
+        id="productName"
+        placeholder=" Input product Name"
+      /><br />
+      <input type="text" id="price" placeholder=" Input price" />
+      <br />
+      <button id="btCreate">Create</button> <br />
+    </form>
+    <input
+      type="text"
+      id="seachProduct"
+      placeholder=" Nhập tên sản phẩm cần tìm kiếm"
+      onchange="search()"
+    />
+    <table border="1">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Product ID</th>
+          <th>Product Name</th>
+          <th>Price</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+      // lấy dữ liệu
+      let btCreate = document.getElementById("btCreate");
+      //
+      const listProductDB = JSON.parse(localStorage.getItem("listProduct"));
+      btCreate.addEventListener("click", function () {
+        //kiem tra da có id chưa
+        let listProduct = JSON.parse(localStorage.getItem("listProduct"));
+        let productId = document.getElementById("productId").value;
+        let exist = false;
+        if (listProduct != null) {
+          for (const product of listProduct) {
+            if (product.productId == productId) {
+              // đã tồn tại ID
+              exist = true;
+              break;
+            }
+          }
+        }
+        if (exist) {
+          //đã tồn tại
+          editProduct();
+        } else {
+          createProduct();
+        }
+      });
+      // funcion thêm mới 1 sản phẩm
+      function createProduct() {
+        //Lấy dữ liệu listProduct từ localStorage
+        let listProduct = JSON.parse(localStorage.getItem("listProduct"));
+        if (listProduct == null) {
+          listProduct = [];
+        }
+        let productId = document.getElementById("productId").value;
+        let productName = document.getElementById("productName").value;
+        let price = parseFloat(document.getElementById("price").value);
+        if (!price || !productName || !productId) {
+          alert("Hay nhap day du thong tin");
+        } else {
+          
+          let newProduct = {
+            productId: productId,
+            productName: productName,
+            price: price,
+          };
+          // thêm đối tượng newProduct vào listProduct:
+          listProduct.push(newProduct);
+
+          // đè list product và local storage
+          localStorage.setItem("listProduct", JSON.stringify(listProduct));
+          readListProduct(listProduct);
+        }
+      }
+
+      function readListProduct(listProduct) {
+        //b1. Lấy listProduct từ local storage
+
+        if (listProduct == null) {
+          listProduct = [];
+        }
+        //B2:Hiên thị dữ liệu vào table
+        let tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
+        listProduct.forEach((product, index) => {
+          //Hiển thị ra 1 sp trong tableBody
+          tableBody.innerHTML += `
+                <tr>
+                   <td>${index + 1}</td>
+                   <td>${product.productId}</td>
+                   <td>${product.productName}</td>
+                   <td>${product.price}</td>
+                   <td>
+                      <button onclick="updateProduct('${
+                        product.productId
+                      }')"> Edit</button>
+                      <button onclick="deleteProduct('${
+                        product.productId
+                      }')"> Delete</button>
+                     </td>
+                </tr>
+                `;
+        });
+      }
+
+      function updateProduct(productId) {
+        // từ productid. lấy ra được tt của Sp
+        //b1. lấy dữ liệu từ local storage
+        let listProduct = JSON.parse(localStorage.getItem("listProduct"));
+        // b1.2 duyệt product
+        let productUpdate = listProduct.filter((product) => {
+          if (product.productId == productId) {
+            return product;
+          }
+        });
+        // Đẩy lên form
+        document.getElementById("productId").value = productUpdate[0].productId;
+        document.getElementById("productName").value =
+          productUpdate[0].productName;
+        document.getElementById("price").value = productUpdate[0].price;
+      }
+      function editProduct() {
+        //b1. lấy dữ liệu từ local storage
+        let listProduct = JSON.parse(localStorage.getItem("listProduct"));
+        //b2. Lấy dữ liệu cần cập nhật.
+        let productId = document.getElementById("productId").value;
+        let productName = document.getElementById("productName").value;
+        let price = parseFloat(document.getElementById("price").value);
+        // b3. tìm và cập nhật đối tượng
+
+        let listproductUpdate = listProduct.map((product) => {
+          if (product.productId == productId) {
+            product.productName = productName;
+            product.price = price;
+          }
+          return product;
+        });
+
+        //b4: Đè list product
+        localStorage.setItem("listProduct", JSON.stringify(listproductUpdate));
+        //b5:
+        readListProduct(listproductUpdate);
+      }
+      function deleteProduct(productId) {
+        //b1. lấy dữ liệu từ local storage
+        const products = listProductDB.filter(
+          (product) => productId != product.productId
+        );
+        localStorage.setItem("listProduct", JSON.stringify(products));
+        readListProduct(products);
+      }
+
+      function search() {
+        //b1. lấy dữ liệu từ local storage
+        let listProduct = JSON.parse(localStorage.getItem("listProduct"));
+        let seachProductName = document.getElementById("seachProduct").value;
+        //b2. Tìm kiếm trong danh sách có sp đó không
+        const searchArr = listProduct.filter((product) =>
+          product.productName.includes(seachProductName)
+        );
+        readListProduct(searchArr);
+      }
+      readListProduct(listProductDB);
+    </script>
+  </body>
+</html>
